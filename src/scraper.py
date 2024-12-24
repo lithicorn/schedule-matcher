@@ -16,7 +16,7 @@ for row in rows:
     # print(name)
     colleges.append((name,location))
 
-with open('C:/Users/diffe/Documents/Code/schedule-matcher/src/colleges.txt',mode='w') as f:
+with open('C:/Users/diffe/Documents/Code/schedule-matcher/public/colleges.txt',mode='w') as f:
     for i in range(len(colleges)):
         name, loc = colleges[i]
         if i < len(colleges)-1:

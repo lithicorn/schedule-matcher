@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState, useEffect } from 'react';
 
 // Utility function to generate calendar days for a given month and year
@@ -56,9 +56,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ year }) => {
   }, [year]);
 
   return (
-    <div className="grid grid-cols-3 gap-4 p-4 text-black">
+    <div className="overflow-y-auto xl:overflow-hidden sm:grid lg:grid-cols-2 xl:grid-cols-3 gap-4 p-3 text-black max-h-screen">
       {calendarData.map((monthData, index) => (
-        <div key={index} className="border p-4 rounded-lg shadow-md">
+        <div 
+          key={index} 
+          className={`border p-1 rounded-lg shadow-md mb-4 sm:mb-0 w-full sm:w-auto`}
+        >
           <h3 className="text-center font-semibold text-lg">{monthData.month}</h3>
           <div className="mt-2 grid grid-cols-7 gap-1 text-center">
             {/* Render Days of the Week */}
