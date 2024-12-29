@@ -1735,3 +1735,5 @@ York College, City University of New York%Jamaica
 York University%York
 Young Harris College%Young Harris
 Youngstown State University%Youngstown
+American Musical Dance Academy%New York
+American Musical Dance Academy%Los Angeles

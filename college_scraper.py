@@ -21,3 +21,6 @@ with open('C:/Users/diffe/Documents/Code/schedule-matcher/public/colleges.txt',m
         name, loc = colleges[i]
         if i < len(colleges)-1:
             f.write(name+"%"+loc+"\n")
+    custom = ["American Musical Dance Academy%New York","American Musical Dance Academy%Los Angeles"]
+    for i in custom:
+        f.write(i+"\n")

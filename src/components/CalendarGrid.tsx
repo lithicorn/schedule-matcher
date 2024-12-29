@@ -1,70 +1,118 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
-// Utility function to generate calendar days for a given month and year
 const getCalendarDays = (month: number, year: number): (number | null)[][] => {
-  const daysInMonth = new Date(year, month + 1, 0).getDate(); // Get the last day of the month
-  const firstDay = new Date(year, month, 1).getDay(); // Get the first day of the month
-  const days: (number | null)[] = [];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const days: (number | null)[] = Array(firstDay).fill(null).concat([...Array(daysInMonth).keys()].map((i) => i + 1));
 
-  // Fill in empty slots for days before the first day of the month
-  for (let i = 0; i < firstDay; i++) {
-    days.push(null);
-  }
-
-  // Fill in the days of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push(day);
-  }
-
-  // Group days into weeks (7 days per week)
   const weeks: (number | null)[][] = [];
   while (days.length) {
-    weeks.push(days.splice(0, 7)); // Take 7 days to form a week
+    weeks.push(days.splice(0, 7));
   }
 
   return weeks;
 };
 
-// Function to generate the month names for September to May
 const months = [
   'September', 'October', 'November', 'December',
-  'January', 'February', 'March', 'April', 'May'
+  'January', 'February', 'March', 'April', 'May',
 ];
 
 interface CalendarGridProps {
   year: number;
+  list: string[];
 }
 
-interface CalendarData {
-  month: string;
-  days: (number | null)[][];
-}
+const CalendarGrid: React.FC<CalendarGridProps> = ({ year, list }) => {
+  const [highlightedDates, setHighlightedDates] = useState<Record<string, Record<string, string[]>>>({});
 
-const CalendarGrid: React.FC<CalendarGridProps> = ({ year }) => {
-  const [calendarData, setCalendarData] = useState<CalendarData[]>([]);
+  // Memoize calendarData since it depends only on the year
+  const calendarData = useMemo(() => {
+    return months.map((month, index) => ({
+      month,
+      days: getCalendarDays((index + 8) % 12, year + Math.floor((index + 8) / 12)),
+    }));
+  }, [year]);
+
+  // Fetch data whenever the list changes
+  useEffect(() => {
+    const fetchDates = async () => {
+      try {
+        const response = await fetch('/schedules.txt');
+        if (!response.ok) throw new Error(`Failed to fetch dates. Status: ${response.status}`);
+
+        const text = await response.text();
+        const newDates: Record<string, Record<string, string[]>> = {};
+
+        text.split('\n').forEach((line) => {
+          const data = line.split('*');
+          const college = data[0];
+          if (list.includes(college)) {
+            const datesString = data[1];
+            const datePairs = datesString.split('@');
+            datePairs.forEach((pair) => {
+              const [start, end] = pair.split('!');
+              if (start && end) {
+                const startDate = new Date(start);
+                startDate.setDate(startDate.getDate()+1);
+                const endDate = new Date(end);
+                endDate.setDate(endDate.getDate()+1);
+                for (
+                  let date = new Date(startDate);
+                  date <= endDate;
+                  date.setDate(date.getDate() + 1)
+                ) {
+                  const year = date.getFullYear();
+                  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                  const day = date.getDate().toString();
+                  const key = `${year}-${month}`;
+
+                  newDates[key] = newDates[key] || {};
+                  newDates[key][day] = newDates[key][day] || [];
+                  const collegeName = college.split('%')[0];
+                  if (!newDates[key][day].includes(collegeName)) {
+                    newDates[key][day].push(collegeName);
+                  }
+                }
+              }
+            });
+          }
+        });
+
+        setHighlightedDates((prevDates) => ({...prevDates,...newDates}));
+      } catch (error) {
+        console.error('Error fetching dates:', error);
+      }
+    };
+
+    if (list.length > 0) {
+      fetchDates();
+    } else {
+      setHighlightedDates({});
+    }
+  }, [list]);
+
+  const isHighlighted = useMemo(() => {
+    return (month: string, day: number): string[] | null => {
+      const monthIndex = months.indexOf(month);
+      const actualYear = year + Math.floor((monthIndex + 8) / 12);
+      const actualMonth = ((monthIndex + 8) % 12 + 1).toString().padStart(2, '0');
+      const key = `${actualYear}-${actualMonth}`;
+      return highlightedDates[key]?.[day.toString()] || null;
+    };
+  }, [highlightedDates, year]);
 
   useEffect(() => {
-    // Generate calendar data for each month from September to May
-    const data = months.map((month, index) => {
-      return {
-        month,
-        days: getCalendarDays(index + 8, year) // 8 + index to map September to May
-      };
-    });
-    setCalendarData(data);
-  }, [year]);
+    console.log("List updated:", list);
+  }, [list]);  
 
   return (
     <div className="overflow-y-auto xl:overflow-hidden sm:grid lg:grid-cols-2 xl:grid-cols-3 gap-4 p-3 text-black max-h-screen">
       {calendarData.map((monthData, index) => (
-        <div 
-          key={index} 
-          className={`border p-1 rounded-lg shadow-md mb-4 sm:mb-0 w-full sm:w-auto`}
-        >
+        <div key={index} className="border p-1 rounded-lg shadow-md mb-4 sm:mb-0 w-full sm:w-auto">
           <h3 className="text-center font-semibold text-lg">{monthData.month}</h3>
           <div className="mt-2 grid grid-cols-7 gap-1 text-center">
-            {/* Render Days of the Week */}
             <div className="font-semibold">Sun</div>
             <div className="font-semibold">Mon</div>
             <div className="font-semibold">Tue</div>
@@ -72,20 +120,23 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ year }) => {
             <div className="font-semibold">Thu</div>
             <div className="font-semibold">Fri</div>
             <div className="font-semibold">Sat</div>
-
-            {/* Render Weeks */}
             {monthData.days.map((week, weekIndex) => (
               <React.Fragment key={weekIndex}>
-                {week.map((day, dayIndex) => (
-                  <div
-                    key={dayIndex}
-                    className={`p-2 ${day ? 'bg-white' : 'bg-transparent'} ${
-                      day ? 'cursor-pointer' : ''
-                    }`}
-                  >
-                    {day || ''}
-                  </div>
-                ))}
+                {week.map((day, dayIndex) => {
+                  const colleges = day ? isHighlighted(monthData.month, day) : null;
+                  const saturation = colleges ? colleges.length / (list.length || 1) : 0;
+
+                  return (
+                    <div
+                      key={dayIndex}
+                      className={`p-2 ${day ? 'cursor-pointer' : ''} ${colleges ? 'text-white' : 'bg-white'}`}
+                      style={colleges ? { backgroundColor: `rgba(0, 128, 0, ${saturation})` } : {}}
+                      title={colleges ? colleges.join(', ') : ''}
+                    >
+                      {day || ''}
+                    </div>
+                  );
+                })}
               </React.Fragment>
             ))}
           </div>

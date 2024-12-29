@@ -1,16 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import html2canvas from 'html2canvas';
-import { IconButton, Tooltip, Icon } from '@mui/material';
-import { WbSunny, DarkMode, SaveAlt, Link, FileCopy, Check } from '@mui/icons-material';
-
-MuiButton: {
-  styleOverrides: {
-    root: {
-      lineHeight: 0
-    }
-  }
-}
+import { IconButton, Tooltip } from '@mui/material';
+import { SaveAlt, Link, FileCopy, Check } from '@mui/icons-material'; //WbSunny, DarkMode, 
 
 interface ActionMenuProps {
   toPic: React.RefObject<HTMLDivElement | null>;
@@ -21,7 +13,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ toPic }) => {
 
   const saveCalendarAsImage = async () => {
     if (toPic.current) {
-      const copyPic = toPic;
+      // const copyPic = toPic;
       const originalWidth = toPic.current.style.width;
       // toPic.current.style.width = '1920px'; // Mimic XL screen width
 
@@ -81,21 +73,22 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ toPic }) => {
         </Tooltip>
       </div>
 
-      {/* Copy Link Button */}
-      
-      <div className="flex items-center justify-center w-full">
-        <Tooltip title="Copy Link">
-          <IconButton onClick={copyLink} aria-label="Copy Link" color="primary">
-            <Link />
-          </IconButton>
-        </Tooltip>
-      </div>
       {/* Copy Image to Clipboard Button */}
       
       <div className="flex items-center justify-center w-full">
         <Tooltip title="Copy Image to Clipboard">
           <IconButton onClick={copyImageToClipboard} aria-label="Copy Image" color="primary">
             <FileCopy />
+          </IconButton>
+        </Tooltip>
+      </div>
+
+      {/* Copy Link Button */}
+      
+      <div className="flex items-center justify-center w-full">
+        <Tooltip title="Copy Code">
+          <IconButton onClick={copyLink} aria-label="Copy Link" color="primary">
+            <Link />
           </IconButton>
         </Tooltip>
       </div>
