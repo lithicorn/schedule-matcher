@@ -136,15 +136,6 @@ const CollegeAutocomplete: React.FC<CollegeAutocompleteProps> = ({ onQuery }) =>
     }
   };
 
-  // Copy the encrypted key to clipboard
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(encryptedKey).then(() => {
-      alert('Encrypted key copied to clipboard');
-    }).catch(err => {
-      console.error('Failed to copy text: ', err);
-    });
-  };
-
   // Use useEffect to notify parent component about changes
   useEffect(() => {
     const encodedCollege = encode(JSON.stringify({ visibleColleges, visibility }));
